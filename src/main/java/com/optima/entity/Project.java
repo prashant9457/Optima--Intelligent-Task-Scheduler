@@ -43,6 +43,6 @@ public class Project {
     private LocalDateTime completedAt;
 
     public enum ProjectStatus {
-        PENDING, SCHEDULED, COMPLETED
+        PENDING, SCHEDULED, COMPLETED, NOT_COMPLETED
     }
 }

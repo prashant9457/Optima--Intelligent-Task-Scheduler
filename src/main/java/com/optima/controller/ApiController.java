@@ -83,4 +83,9 @@ public class ApiController {
     public void executeSchedule() {
         schedulingService.executeCurrentSchedule();
     }
+
+    @GetMapping("/schedule/predictions")
+    public PredictionResponseDTO getPredictions() {
+        return schedulingService.getPredictions();
+    }
 }

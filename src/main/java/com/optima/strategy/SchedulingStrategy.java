@@ -23,6 +23,8 @@ class FcfsSchedulingStrategy implements SchedulingStrategy {
                 result.put(day, p);
                 day++;
             }
+            if (result.size() >= 5)
+                break;
         }
         return result;
     }
@@ -46,6 +48,8 @@ class EdfSchedulingStrategy implements SchedulingStrategy {
                 result.put(day, p);
                 day++;
             }
+            if (result.size() >= 5)
+                break;
         }
         return result;
     }
@@ -69,6 +73,8 @@ class MaxRevenueSchedulingStrategy implements SchedulingStrategy {
                 result.put(day, p);
                 day++;
             }
+            if (result.size() >= 5)
+                break;
         }
         return result;
     }
@@ -97,6 +103,8 @@ class GreedySchedulingStrategy implements SchedulingStrategy {
                     break;
                 }
             }
+            if (result.size() >= 5)
+                break;
         }
         return result;
     }

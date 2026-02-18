@@ -1,158 +1,108 @@
-# Optima: Intelligent Task Scheduler
+# Optima — Intelligent Task Scheduler
 
-![Java](https://img.shields.io/badge/Java-17-orange) ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.2-green) ![React](https://img.shields.io/badge/React-19-blue) ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791)
-
-**Optima** is an enterprise-grade project scheduling engine designed to maximize revenue and optimize workflow efficiency. Built with a robust **Spring Boot** backend and a high-performance **React** frontend, it leverages the **Strategy Design Pattern** to allow runtime switching between different scheduling algorithms.
-
-The interface features an **"Arctic Minimalist"** design language—clean, precise, and professional.
+Optima is a high-end, professionally engineered task scheduling application designed to optimize project workflows based on varied algorithm protocols. It features a premium **Luxury Obsidian** UI with a permanent dark aesthetic and precise reactive logic.
 
 ---
 
-## 🚀 Key Features
+## 🚀 Quick Start Guide
 
-### 🧠 Intelligent Scheduling Algorithms
-The core engine supports multiple scheduling strategies, hot-swappable at runtime:
-*   **Greedy (Revenue-Deadline)**: *Recommended*. Sorts by revenue and schedules as late as possible to free up early slots for tighter deadlines. Maximizes total revenue.
-*   **Priority (Highest Revenue)**: *Simple*. strict revenue-first approach. Good for loose deadlines.
-*   **EDF (Earliest Deadline First)**: *Urgent*. Prioritizes the most time-critical tasks. Minimizes missed deadlines.
-*   **FCFS (First Come, First Served)**: *Fair*. The classic queue model based on arrival time.
+Follow these steps to set up Optima on your local machine.
 
-### 📊 Real-Time Analytics
-*   **Yield Analytics**: Interactive Area Chart visualizing revenue trends over the last 30 days.
-*   **Live Metrics**: Instant updates for Weekly/Monthly Yield and Project Completion counts.
-*   **Execution Stream**: visualizes the computed schedule before you commit to execution.
+### 1. Prerequisites
+Ensure you have the following installed:
+- **Java 17** or higher
+- **Node.js** (v18+) & **npm**
+- **PostgreSQL** (v14+)
+- **Maven**: You can use the included `./mvnw` wrapper, or install it manually:
+  - **Download**: Get the "Binary base zip" from the [Official Maven Website](https://maven.apache.org/download.cgi).
+  - **Setup**: Unzip it to a directory (e.g., `D:\apache-maven-3.9.12`).
+  - **Locate**: The executable is found at `[Your-Path]\bin\mvn.cmd` (on Windows). 
+  - *Example path for manual execution:* `D:\lenovo\downloads\apache-maven-3.9.12\bin\mvn.cmd`
 
-### 🎨 Modern UI/UX
-*   **Arctic Minimalism**: A cold, rational aesthetic with frosted glass effects (backdrop-filter).
-*   **Responsive Dashboard**: A 3-column layout optimized for desktop operations.
-*   **Archive View**: Detailed history of all completed and verified projects.
+### 2. Database Configuration (Critical)
+Optima requires a PostgreSQL database.
+
+1.  **Create the Database**:
+    Open your PostgreSQL terminal (psql) or a tool like pgAdmin and run:
+    ```sql
+    CREATE DATABASE promanage;
+    ```
+    *(Note: The internal service uses 'promanage' as the default identifier for compatibility).*
+
+2.  **Configure Credentials**:
+    Edit `src/main/resources/application.properties` with your local database username and password:
+    ```properties
+    spring.datasource.username=your_username
+    spring.datasource.password=your_password
+    ```
+
+### 3. Backend Setup (Spring Boot)
+1.  Navigate to the project root directory.
+2.  Run the backend using the Maven wrapper:
+    ```bash
+    ./mvnw clean spring-boot:run
+    ```
+    *Alternatively, use your manual Maven installation:*
+    ```bash
+    & "D:\Path\To\Maven\bin\mvn.cmd" spring-boot:run
+    ```
+    *The API will start at:* `http://localhost:8080`
+    *Swagger Documentation:* `http://localhost:8080/swagger-ui.html`
+
+### 4. Frontend Setup (Vite + React)
+1.  Navigate to the `frontend` directory:
+    ```bash
+    cd frontend
+    ```
+2.  Install dependencies:
+    ```bash
+    npm install
+    ```
+3.  Start the development server:
+    ```bash
+    npm run dev
+    ```
+    *The UI will open at:* `http://localhost:5173`
 
 ---
 
-## 🛠️ Technology Stack
+## 💾 Technical Schema
+While Hibernate handles table creation automatically (`ddl-auto=update`), here is the manual schema for reference:
 
-### Backend (Server)
-*   **Framework**: Spring Boot 3.2.2
-*   **Language**: Java 17
-*   **Database**: PostgreSQL
-*   **ORM**: Spring Data JPA / Hibernate
-*   **API Documentation**: SpringDoc OpenAPI (Swagger UI)
-
-### Frontend (Client)
-*   **Framework**: React 19
-*   **Build Tool**: Vite
-*   **Language**: TypeScript
-*   **Styling**: Custom CSS (Glassmorphism & CSS Variables)
-*   **Visualization**: Recharts
-*   **HTTP Client**: Axios
-
----
-
-## ⚙️ Prerequisites
-
-Before running the application, ensure you have the following installed:
-*   **Java Development Kit (JDK) 17** or higher
-*   **Node.js 18+** and **npm**
-*   **PostgreSQL** (running locally)
-
----
-
-## 📥 Installation & Setup
-
-### 1. Database Setup
-Create a PostgreSQL database named `optima`.
 ```sql
-CREATE DATABASE optima;
-```
-*Note: The application is configured to use the default `postgres` user with password `945713`. You can modify these credentials in `src/main/resources/application.properties`.* 
-
-**Important:** By default, the application is configured to connect to a database named `promanage` for backward compatibility. To use the new `optima` database, update the `spring.datasource.url` property in `src/main/resources/application.properties`.
-
-### 2. Backend Setup
-Navigate to the root directory and run the Spring Boot application using the Maven Wrapper.
-
-**Windows:**
-```powershell
-./mvnw spring-boot:run
-```
-
-**Mac/Linux:**
-```bash
-./mvnw spring-boot:run
-```
-
-The server will start on `http://localhost:8080`.
-*   **Swagger API Docs**: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
-
-### 3. Frontend Setup
-Open a new terminal, navigate to the `frontend` directory, install dependencies, and start the dev server.
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-The frontend will start on `http://localhost:5173` (or the port shown in your terminal, e.g., 5174 if 5173 is busy).
-
-**Running Status:**
-*   The Backend is currently running in one terminal (port 8080).
-*   The Frontend is currently running in another terminal (port 5174).
-*   The application logs are viewable in `app_utf8.log` and `frontend_utf8.log`.
-
----
-
-## 📖 Usage Guide
-
-1.  **Enqueue Projects**: Use the "Enqueue Asset" form on the dashboard to add new projects with a Title, Deadline (in days from today), and Expected Revenue.
-2.  **Select Strategy**: Use the "Algorithm Protocol" panel to switch between scheduling strategies (Greedy, Priority, etc.). The system will instantly recalculate the optimal schedule.
-3.  **Review Schedule**: Check the "Execution Stream" panel to see which projects are scheduled for which days.
-4.  **Execute**: Click **"Authorize & Execute"** to commit the schedule.
-    *   Scheduled projects will be marked as `COMPLETED`.
-    *   Revenue will be added to your total stats.
-    *   The "Yield Analytics" graph will update.
-5.  **View History**: Switch to the "Archive" tab to view a table of all completed projects.
-
----
-
-## 📂 Project Structure
-
-```
-optima-scheduler/
-├── frontend/                 # React Frontend
-│   ├── src/
-│   │   ├── App.tsx           # Main Dashboard Logic
-│   │   ├── App.css           # Global Styles & Theme
-│   │   └── ...
-│   ├── vite.config.js        # Vite Configuration
-│   └── ...
-├── src/                      # Java Backend
-│   ├── main/java/com/optima
-│   │   ├── config/           # App Configuration (CORS, Data Seeding)
-│   │   ├── controller/       # REST API Endpoints
-│   │   ├── dto/              # Data Transfer Objects
-│   │   ├── entity/           # Database Entities
-│   │   ├── exception/        # Global Exception Handling
-│   │   ├── repository/       # JPA Repositories
-│   │   ├── service/          # Business Logic
-│   │   ├── strategy/         # Scheduling Algorithms (Strategy Pattern)
-│   │   └── OptimaApplication.java # Main Class
-│   └── main/resources/
-│       └── application.properties # App & DB Config
-├── pom.xml                   # Maven Dependencies
-└── README.md                 # Project Documentation
+CREATE TABLE projects (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    deadline INTEGER NOT NULL,          -- Days until expiration
+    expected_revenue NUMERIC(12, 2),    -- Projected profit
+    status VARCHAR(50) DEFAULT 'PENDING', 
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP
+);
 ```
 
 ---
 
-## 🤝 Contributing
+## 🧠 Core Systems
 
-1.  Fork the repository.
-2.  Create your feature branch (`git checkout -b feature/AmazingFeature`).
-3.  Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-4.  Push to the branch (`git push origin feature/AmazingFeature`).
-5.  Open a Pull Request.
+### 1. Protocol Intelligence (Simulation)
+The dashboard features an **Intelligence: Yield Simulation** panel. This system runs all available algorithms against the current queue in real-time to predict which one will yield the highest profit *before* you execute the batch.
+
+### 2. Scheduling Strategies
+- **Greedy (Recommended)**: Optimizes for maximum revenue while respecting all deadlines.
+- **EDF (Earliest Deadline First)**: Prioritizes urgency above all else.
+- **Priority**: Sorts strictly by revenue magnitude.
+- **FCFS**: Standard queue fairness (First Come, First Served).
+
+### 3. Execution Constraints
+- **Batch Limit**: The system processes exactly **5 projects** per execution slot to ensure operational focus.
+- **Strategy Pattern**: Protocols can be swapped instantly via the dashboard without a server restart.
 
 ---
 
-**© 2026 Optima Systems**
+## 🎨 Design Language: "Luxury Obsidian"
+The interface implements a high-end dark-only environment:
+- **Foundations**: Ebonized Slate and Deep Void surfaces.
+- **Texture**: High-fidelity grey noise overlay for a tactile, matte feel.
+- **Lighting**: Razor-thin reflective borders ("Gloss Edges") that simulate light on polished metal.
+- **Typography**: Inter & DM Sans calibrated for maximum pro-grade legibility.

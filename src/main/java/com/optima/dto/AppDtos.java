@@ -10,7 +10,9 @@ public class AppDtos {
                         @NotBlank(message = "Title is required") String title,
                         @NotNull(message = "Deadline is required") @Min(1) @Max(365) Integer deadline,
                         @NotNull(message = "Expected revenue is required") @Positive BigDecimal expectedRevenue,
-                        String status) {
+                        String status,
+                        String createdAt,
+                        String completedAt) {
         }
 
         public record DashboardDTO(
@@ -24,5 +26,16 @@ public class AppDtos {
                         Map<Integer, ProjectDTO> schedule,
                         BigDecimal totalRevenue,
                         int projectsScheduled) {
+        }
+
+        public record StrategyPredictionDTO(
+                        String strategyKey,
+                        String strategyName,
+                        BigDecimal projectedRevenue) {
+        }
+
+        public record PredictionResponseDTO(
+                        java.util.List<StrategyPredictionDTO> predictions,
+                        String bestStrategyKey) {
         }
 }

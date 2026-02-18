@@ -14,8 +14,11 @@ interface Project {
   deadline: number;
   expectedRevenue: number;
   status: string;
+  createdAt?: string;
   completedAt?: string;
 }
+
+
 
 interface ScheduleResponse {
   schedule: Record<number, Project>;
@@ -32,6 +35,17 @@ interface DashboardStats {
 interface AnalyticsData {
   date: string;
   revenue: number;
+}
+
+interface StrategyPrediction {
+  strategyKey: string;
+  strategyName: string;
+  projectedRevenue: number;
+}
+
+interface PredictionResponse {
+  predictions: StrategyPrediction[];
+  bestStrategyKey: string;
 }
 
 const ALGORITHMS = [
@@ -95,9 +109,9 @@ const AboutView = () => (
       <div className="about-flow">
         {[
           { step: '01', title: 'Ingest', desc: 'Add a project with a title, deadline (in days), and expected revenue via the Enqueue Asset form.' },
-          { step: '02', title: 'Select Algorithm', desc: 'Choose a scheduling algorithm from the Protocol panel. The engine supports four distinct strategies.' },
-          { step: '03', title: 'Preview Schedule', desc: 'The engine instantly computes the optimal weekly schedule and projected yield using the selected algorithm.' },
-          { step: '04', title: 'Execute', desc: 'Authorize the release — projects are marked completed and revenue is committed to the database.' },
+          { step: '02', title: 'Select Algorithm', desc: 'Choose a scheduling algorithm. The engine will select the top 5 projects that maximize revenue under that strategy.' },
+          { step: '03', title: 'Preview Schedule', desc: 'The engine instantly computes the optimal schedule for those 5 slots and projected yield.' },
+          { step: '04', title: 'Execute', desc: 'Authorize the release — the top 5 projects are marked completed and revenue is committed.' },
           { step: '05', title: 'Analyze', desc: 'The Yield Analytics graph updates with your historical revenue trends over the last 30 days.' },
         ].map(({ step, title, desc }) => (
           <div key={step} className="about-flow-item">
@@ -162,19 +176,107 @@ const AboutView = () => (
     <div className="about-section">
       <div className="about-section-label">Design Language</div>
       <div className="about-design-note">
-        The interface follows <strong>Arctic Minimalism</strong> — an icy blue base, frosted glass
-        panels with <em>backdrop-filter blur</em>, cool gray typography, and crisp high-contrast
-        spacing. Cold, precise, and rational. Every element earns its place.
+        The interface follows <strong>Luxury Obsidian</strong> — a perfect fusion of <em>dense matt black</em> surfaces 
+        and <em>sharp shiny reflections</em>. Featuring backdrop-blurs, 1:1 semantic theme transitions, 
+        and a high-end satin texture, creating an aesthetic that is both solid and hyper-smooth.
       </div>
     </div>
   </div>
 )
 
+const ProjectDetailModal: React.FC<{ 
+  project: Project, 
+  totalPendingRevenue: number, 
+  onClose: () => void 
+}> = ({ project, totalPendingRevenue, onClose }) => {
+  const contribution = ((project.expectedRevenue / totalPendingRevenue) * 100).toFixed(1)
+  const arrivalDate = project.createdAt ? new Date(project.createdAt).toLocaleDateString() : 'N/A'
+  
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <div className="modal-tag">Project Blueprint</div>
+            <h3 className="modal-title">{project.title}</h3>
+          </div>
+          <button className="modal-close" onClick={onClose}>&times;</button>
+        </div>
+        
+        <div className="modal-body">
+          <div className="modal-grid">
+            <div className="modal-stat">
+              <label>Revenue Impact</label>
+              <div className="modal-value">${project.expectedRevenue.toLocaleString()}</div>
+              <div className="modal-subtext">Contribution: {contribution}% of queue</div>
+            </div>
+            <div className="modal-stat">
+              <label>Time Criticality</label>
+              <div className="modal-value">{project.deadline} Days</div>
+              <div className="modal-subtext">Expires by: {new Date(Date.now() + project.deadline * 86400000).toLocaleDateString()}</div>
+            </div>
+          </div>
+
+          <div className="modal-details">
+            <div className="modal-detail-row">
+              <span>Status</span>
+              <span className="status-pending" style={{ textTransform: 'uppercase', fontSize: '10px', fontWeight: 600 }}>{project.status}</span>
+            </div>
+            <div className="modal-detail-row">
+              <span>Arrival Timestamp</span>
+              <span>{arrivalDate}</span>
+            </div>
+            <div className="modal-detail-row">
+              <span>Asset Engine ID</span>
+              <span style={{ fontFamily: 'monospace' }}>#{project.id.toString().padStart(4, '0')}</span>
+            </div>
+          </div>
+
+          <p className="modal-description">
+            This asset is currently in the <strong>{project.status.toLowerCase()} queue</strong>. 
+            The scheduling engine will prioritize it based on the active protocol. 
+            Missing the {project.deadline}-day window will result in a total loss of the projected yield.
+          </p>
+        </div>
+        
+        <div className="modal-footer">
+          <button className="btn-prime" onClick={onClose}>Close Overview</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const PredictiveAnalytics: React.FC<{ predictions: PredictionResponse | null }> = ({ predictions }) => {
+  if (!predictions || predictions.predictions.length === 0) return null;
+
+  return (
+    <div className="prediction-panel">
+      <div className="section-header">
+        <h2>Intelligence: Yield Simulation</h2>
+      </div>
+      <div className="prediction-grid">
+        {predictions.predictions
+          .sort((a, b) => b.projectedRevenue - a.projectedRevenue)
+          .map(pred => (
+          <div key={pred.strategyKey} className={`prediction-card ${predictions.bestStrategyKey === pred.strategyKey ? 'best' : ''}`}>
+             <div className="prediction-label">{pred.strategyName.split('(')[0]}</div>
+             <div className="prediction-value">${pred.projectedRevenue.toLocaleString()}</div>
+             {predictions.bestStrategyKey === pred.strategyKey && (
+               <div className="prediction-badge">Optimized Target</div>
+             )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 const App: React.FC = () => {
+  // ... existing states ...
+  // (Assuming I'm inserting this above App, I need to make sure I don't duplicate App)
   const [view, setView] = useState<'dashboard' | 'history' | 'about'>('about')
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    return (localStorage.getItem('optima-theme') as 'light' | 'dark') || 'light'
-  })
+  const [theme] = useState<'dark'>('dark')
   const [projects, setProjects] = useState<Project[]>([])
   const [allProjects, setAllProjects] = useState<Project[]>([])
   const [schedule, setSchedule] = useState<ScheduleResponse>({ schedule: {}, totalRevenue: 0 })
@@ -187,15 +289,18 @@ const App: React.FC = () => {
   })
   const [analytics, setAnalytics] = useState<AnalyticsData[]>([])
   const [newProject, setNewProject] = useState({ title: '', deadline: '', expectedRevenue: '' })
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [predictions, setPredictions] = useState<PredictionResponse | null>(null)
 
   const fetchData = async () => {
     try {
-      const [pRes, sRes, stRes, dsRes, anRes] = await Promise.all([
+      const [pRes, sRes, stRes, dsRes, anRes, predRes] = await Promise.all([
         axios.get<Project[]>(`${API_BASE}/projects`),
         axios.get<ScheduleResponse>(`${API_BASE}/schedule/current`),
         axios.get<{ currentStrategy: string }>(`${API_BASE}/schedule/strategy`),
         axios.get<DashboardStats>(`${API_BASE}/schedule/stats`),
         axios.get<AnalyticsData[]>(`${API_BASE}/schedule/analytics`),
+        axios.get<PredictionResponse>(`${API_BASE}/schedule/predictions`),
       ])
       setAllProjects(pRes.data)
       setProjects(pRes.data.filter(p => p.status === 'PENDING'))
@@ -203,6 +308,7 @@ const App: React.FC = () => {
       setStrategy(stRes.data.currentStrategy)
       setStats(dsRes.data)
       setAnalytics(anRes.data)
+      setPredictions(predRes.data)
     } catch (err) {
       console.error(err)
     }
@@ -212,13 +318,8 @@ const App: React.FC = () => {
 
   // Theme Config
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-    localStorage.setItem('optima-theme', theme)
-  }, [theme])
-
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light')
-  }
+    document.documentElement.setAttribute('data-theme', 'dark')
+  }, [])
 
   const handleCreateProject = async (e: FormEvent) => {
     e.preventDefault()
@@ -237,16 +338,31 @@ const App: React.FC = () => {
     fetchData()
   }
 
+  const handleDeleteProject = async (id: number) => {
+    if (window.confirm('Discard this project from the queue?')) {
+      await axios.delete(`${API_BASE}/projects/${id}`)
+      fetchData()
+    }
+  }
+
+  const focusForm = () => {
+    const input = document.getElementById('project-title-input')
+    if (input) {
+      input.focus()
+      input.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+
   const viewLabel: Record<string, string> = {
     dashboard: 'Operations',
     history:   'Archive',
     about:     'About',
   }
 
-  // Chart Colors based on theme
-  const chartStroke = theme === 'dark' ? '#5ba4e6' : '#2d6fa3'
-  const chartGrid = theme === 'dark' ? 'rgba(91, 164, 230, 0.1)' : 'rgba(45, 111, 163, 0.1)'
-  const chartText = theme === 'dark' ? '#6b8299' : '#8aa0b4'
+  // Chart Colors (Fixed Dark Theme - Neutral Grey / Obsidian)
+  const chartStroke = '#a3a3a3'
+  const chartGrid = 'rgba(255, 255, 255, 0.05)'
+  const chartText = '#525252'
 
   return (
     <div className="layout">
@@ -299,40 +415,6 @@ const App: React.FC = () => {
             <span>{viewLabel[view]}</span>
           </h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <button
-              onClick={toggleTheme}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                color: 'var(--text-secondary)',
-                transition: 'color 0.2s',
-              }}
-              title="Toggle Theme"
-            >
-              {theme === 'light' ? (
-                // Moon Icon
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                </svg>
-              ) : (
-                // Sun Icon
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="5"></circle>
-                  <line x1="12" y1="1" x2="12" y2="3"></line>
-                  <line x1="12" y1="21" x2="12" y2="23"></line>
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                  <line x1="1" y1="12" x2="3" y2="12"></line>
-                  <line x1="21" y1="12" x2="23" y2="12"></line>
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                </svg>
-              )}
-            </button>
             <div className="status-badge">
               <span className="status-dot" />
               System Online
@@ -344,6 +426,8 @@ const App: React.FC = () => {
 
         {view === 'dashboard' && (
           <div className="dashboard-grid">
+            {/* TOP WIDE PANEL: PREDICTIONS */}
+            <PredictiveAnalytics predictions={predictions} />
 
             {/* COL 1: CONTROLS */}
             <div className="panel">
@@ -368,6 +452,7 @@ const App: React.FC = () => {
               </div>
               <form onSubmit={handleCreateProject} className="form-group">
                 <input
+                  id="project-title-input"
                   placeholder="Project title"
                   value={newProject.title}
                   onChange={e => setNewProject({ ...newProject, title: e.target.value })}
@@ -435,16 +520,30 @@ const App: React.FC = () => {
 
               <div className="section-header">
                 <h2>Pending Queue</h2>
-                <span className="section-header-count">{projects.length} items</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className="section-header-count">{projects.length} </span>
+                  <button 
+                    className="action-btn-plus" 
+                    onClick={focusForm}
+                    title="Add Project"
+                  >+</button>
+                </div>
               </div>
               <div className="stream-list">
                 {projects.length === 0 && (
                   <div className="no-data">No pending projects in queue.</div>
                 )}
                 {projects.map(p => (
-                  <div key={p.id} className="queue-item">
-                    <span className="queue-item-title">{p.title}</span>
-                    <span className="queue-item-revenue">${p.expectedRevenue.toLocaleString()}</span>
+                  <div key={p.id} className="queue-item-wrapper">
+                    <div className="queue-item" onClick={() => setSelectedProject(p)} style={{ cursor: 'pointer' }}>
+                      <span className="queue-item-title">{p.title}</span>
+                      <span className="queue-item-revenue">${p.expectedRevenue.toLocaleString()}</span>
+                    </div>
+                    <button 
+                      className="queue-action-minus" 
+                      onClick={() => handleDeleteProject(p.id)}
+                      title="Remove Project"
+                    >−</button>
                   </div>
                 ))}
               </div>
@@ -454,26 +553,42 @@ const App: React.FC = () => {
             <div className="panel">
               <div className="stream-panel">
                 <div className="section-header">
-                  <h2>Execution Stream</h2>
+                  <h2>Execution Stream (Batch Limit: 5)</h2>
                 </div>
                 <div className="batch-summary">
                   <div className="batch-summary-label">Projected Yield</div>
                   <div className="batch-summary-value">${schedule.totalRevenue.toLocaleString()}</div>
                 </div>
+                 {/* Total Loss Display for current batch */}
+                 {(() => {
+                    const scheduledIds = Object.values(schedule.schedule).map((p: any) => p.id);
+                    const pending = projects.filter(p => !scheduledIds.includes(p.id));
+                    const totalLoss = pending.reduce((sum, p) => sum + p.expectedRevenue, 0);
+                    
+                    if (totalLoss > 0) {
+                        return (
+                            <div className="batch-summary" style={{ borderTop: '1px solid var(--ice-3)', background: 'rgba(255, 100, 100, 0.05)' }}>
+                                <div className="batch-summary-label" style={{ color: '#e65b5b' }}>Proj. Loss (Missed)</div>
+                                <div className="batch-summary-value" style={{ color: '#e65b5b' }}>${totalLoss.toLocaleString()}</div>
+                            </div>
+                        )
+                    }
+                    return null;
+                })()}
 
                 <div className="stream-list">
                   {Object.keys(schedule.schedule).length === 0 && (
                     <div className="no-data">
-                      No schedule generated yet.<br />
-                      Select an algorithm to begin.
+                      No batch optimized.<br />
+                      Select a protocol to select top 5.
                     </div>
                   )}
                   {Object.entries(schedule.schedule)
                     .sort(([a], [b]) => Number(a) - Number(b))
-                    .map(([day, p]) => (
+                    .map(([day, p], index) => (
                       <div key={day} className="stream-item">
                         <div>
-                          <div className="stream-item-day">Day {day}</div>
+                          <div className="stream-item-day">Task Selection #{index + 1}</div>
                           <div className="stream-item-title">{p.title}</div>
                         </div>
                         <div className="stream-item-revenue">${p.expectedRevenue.toLocaleString()}</div>
@@ -499,26 +614,37 @@ const App: React.FC = () => {
                 <tr>
                   <th>#</th>
                   <th>Project Title</th>
+                  <th>Arrived</th>
                   <th>Completed</th>
                   <th>Revenue</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                {allProjects.filter(p => p.status === 'COMPLETED').length === 0 && (
+                {allProjects.filter(p => p.status === 'COMPLETED' || p.status === 'NOT_COMPLETED').length === 0 && (
                   <tr>
-                    <td colSpan={5} className="no-data">No completed projects yet.</td>
+                    <td colSpan={6} className="no-data">No history available yet.</td>
                   </tr>
                 )}
-                {allProjects.filter(p => p.status === 'COMPLETED').map((p, i) => (
+                {allProjects.filter(p => p.status === 'COMPLETED' || p.status === 'NOT_COMPLETED').map((p, i) => (
                   <tr key={p.id}>
                     <td style={{ color: 'var(--text-faint)', fontVariantNumeric: 'tabular-nums' }}>{i + 1}</td>
                     <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{p.title}</td>
                     <td style={{ color: 'var(--text-secondary)' }}>
+                        {/* Safe date parsing */}
+                        {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '—'}
+                    </td>
+                    <td style={{ color: 'var(--text-secondary)' }}>
                       {p.completedAt ? new Date(p.completedAt).toLocaleDateString() : '—'}
                     </td>
                     <td className="revenue-cell">${p.expectedRevenue.toLocaleString()}</td>
-                    <td><span className="status-verified">Verified</span></td>
+                    <td>
+                        {p.status === 'COMPLETED' ? (
+                            <span className="status-verified">Verified</span>
+                        ) : (
+                            <span className="status-missed">Missed</span>
+                        )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -526,6 +652,14 @@ const App: React.FC = () => {
           </div>
         )}
       </main>
+
+      {selectedProject && (
+        <ProjectDetailModal 
+          project={selectedProject} 
+          totalPendingRevenue={projects.reduce((sum, p) => sum + p.expectedRevenue, 0)}
+          onClose={() => setSelectedProject(null)} 
+        />
+      )}
     </div>
   )
 }

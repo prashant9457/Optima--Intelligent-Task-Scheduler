@@ -90,14 +90,23 @@ public class SchedulingService {
         public void executeCurrentSchedule() {
                 WeeklyScheduleResponseDTO schedule = generateWeeklySchedule();
                 LocalDateTime now = LocalDateTime.now();
-                schedule.schedule().values().forEach(p -> {
-                        Project project = projectRepository.findById(p.id()).orElse(null);
-                        if (project != null) {
+                Set<Long> scheduledIds = schedule.schedule().values().stream()
+                                .map(ProjectDTO::id)
+                                .collect(Collectors.toSet());
+
+                // Fetch all currently PENDING projects
+                List<Project> pendingProjects = projectRepository.findByStatus(Project.ProjectStatus.PENDING);
+
+                for (Project project : pendingProjects) {
+                        if (scheduledIds.contains(project.getId())) {
                                 project.setStatus(Project.ProjectStatus.COMPLETED);
-                                project.setCompletedAt(now);
-                                projectRepository.save(project);
+                        } else {
+                                project.setStatus(Project.ProjectStatus.NOT_COMPLETED);
                         }
-                });
+                        // Set the timestamp for when this decision/process happened
+                        project.setCompletedAt(now);
+                        projectRepository.save(project);
+                }
         }
 
         public DashboardDTO getDashboardStats() {
@@ -141,12 +150,40 @@ public class SchedulingService {
                                 .collect(Collectors.toList());
         }
 
+        public PredictionResponseDTO getPredictions() {
+                List<Project> pendingProjects = projectRepository.findByStatus(Project.ProjectStatus.PENDING);
+                List<StrategyPredictionDTO> predictions = new ArrayList<>();
+                String bestKey = null;
+                BigDecimal maxRev = BigDecimal.valueOf(-1);
+
+                for (Map.Entry<String, SchedulingStrategy> entry : strategies.entrySet()) {
+                        String key = entry.getKey();
+                        SchedulingStrategy strategy = entry.getValue();
+                        Map<Integer, Project> simSchedule = strategy.schedule(pendingProjects);
+
+                        BigDecimal rev = simSchedule.values().stream()
+                                        .map(Project::getExpectedRevenue)
+                                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                        predictions.add(new StrategyPredictionDTO(key, strategy.getName(), rev));
+
+                        if (rev.compareTo(maxRev) > 0) {
+                                maxRev = rev;
+                                bestKey = key;
+                        }
+                }
+
+                return new PredictionResponseDTO(predictions, bestKey);
+        }
+
         private ProjectDTO convertToDTO(Project project) {
                 return new ProjectDTO(
                                 project.getId(),
                                 project.getTitle(),
                                 project.getDeadline(),
                                 project.getExpectedRevenue(),
-                                project.getStatus().name());
+                                project.getStatus().name(),
+                                project.getCreatedAt() != null ? project.getCreatedAt().toString() : null,
+                                project.getCompletedAt() != null ? project.getCompletedAt().toString() : null);
         }
 }
