@@ -1,0 +1,35 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.properties
+
+# Logs
+*.log
+*.txt
+!requirements.txt
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/
+
+# Node
+node_modules/
+dist/
+coverage/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
+
+# Spring Boot
+src/main/resources/static/assets/
+src/main/resources/static/index.html
+src/main/resources/static/vite.svg
